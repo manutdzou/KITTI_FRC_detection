@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+import cv2
+import sys
+img1 = cv2.imread('/home/dl/faster-rcnn/data/demo/test/20121117_142852/000001.jpg')
+img2 = cv2.imread('/home/dl/faster-rcnn/data/demo/test/20121117_142852/000002.jpg')
+img3 = cv2.imread('/home/dl/faster-rcnn/data/demo/test/20121117_142852/000003.jpg')
+size=(1280,960)
+fps=1
+video=cv2.VideoWriter('MyOutputVid.avi', cv2.cv.CV_FOURCC('I','4','2','0'), fps,size)
+
+video.write(img1)
+video.write(img2)
+video.write(img3)
+
+destroyAllWindows()
+video.release()
