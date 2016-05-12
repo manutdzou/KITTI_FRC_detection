@@ -13,7 +13,7 @@ ImageList_Version_S_AddData.txt为所有数据list,ImageList_Version_S_GT_AddDat
 
 ### 3. 模型
 
-在imagenet_models下载fine_tune的模型VGG_CNN_M_1024.v2.caffemodel,下载命令/scripts/fetch_imagenet_models.sh. 在lib/rpn/generate_anchors.py中设置7个ratios和10个scales共70个anchors，所以模型文件中rpn_cls_score的num_output为140 2(bg/fg) * 70(anchors),rpn_bbox_pred的num_output为280 4 * 70(anchors).需要注意rpn_cls_prob_reshape层的channels应该设为和rpn_cls_score的num_output一致。
+在imagenet_models下载fine_tune的模型VGG_CNN_M_1024.v2.caffemodel,下载命令/scripts/fetch_imagenet_models.sh. 在lib/rpn/generate_anchors.py中设置7个ratios和10个scales共70个anchors，所以模型文件中rpn_cls_score的num_output为140  2(bg/fg) * 70(anchors),rpn_bbox_pred的num_output为280  4 * 70(anchors).需要注意rpn_cls_prob_reshape层的channels应该设为和rpn_cls_score的num_output一致。
 
 ### 4. 生成数据库
 
@@ -22,14 +22,19 @@ ImageList_Version_S_AddData.txt为所有数据list,ImageList_Version_S_GT_AddDat
 ### 5. 算法评估工具
 
 算法评估工具在VOCdevkit-matlab-wrapper中，写了一个KITTI的评估工具，衡量标准为AP值，该工具集成到了python程序中由Python调用matlab.也可以单独由检测生成的/data/results/中的./txt利用main.m直接产生结果。在data/results中可以生成对应类别的所有检测结果图片，TP和FP的结果图片以供分析。
+
 detection_eval.m为算法评估主程序，这里定义了三个类classes={'car','person','bike'}，minoverlap=0.2，建议在一般情况下将读写图片注释掉，因为读写过程比较慢。
 
 ### 6. tools里自己写的工具说明
 
 demo_location.py主要将检测结果记录在txt里，这个接口是为我们的私有数据写的，在这里没有使用。
+
 demo_show.py主要实现将检测结果和真值框同时显示在图片上并将图片保存到data/results/show里面。由于show文件夹没有写成自动建立，需要自建（实在没时间做程序优化啊，见谅啊）。
+
 demo_for_video.py主要实现将视频帧存储的连续图片检测然后做成视频格式，视频格式可自选，默认格式大小最适合。
+
 demo_video_for_video.py顾名思义是读视频然后检测写入视频咯，注意需要将视频放在申明的位置。
+
 train_debug.py和test_net_debug.py主要为了在pycharm中调试使用，此时需要将参数全部写入。
 
 ### 7. 参数设置

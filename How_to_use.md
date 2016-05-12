@@ -17,7 +17,7 @@ ImageList_Version_S_AddData.txt为所有数据list,ImageList_Version_S_GT_AddDat
 
 ### 4. 生成数据库
 
-数据库接口在lib/datasets/中，，注意修改绝对路径。不同于原有的VOC数据格式接口读取xml，该数据接口实现将txt的图片路径和图片真值框列表读入.pkl
+数据库接口在lib/datasets/中，注意修改绝对路径。不同于原有的VOC数据格式接口读取xml，该数据接口实现将txt的图片路径和图片真值框列表读入.pkl
 
 ### 5. 算法评估工具
 
