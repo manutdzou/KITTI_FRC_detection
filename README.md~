@@ -48,6 +48,6 @@ train_debug.py和test_net_debug.py主要为了在pycharm中调试使用，此时
 
 可以直接在终端运行train.sh调用experiments/scripts/faster_rcnn_alt_opt.sh训练网络，经过4个80000次训练获得网络模型和测试结果。你将最终获得APs: Car:88.6, Person:73.0, Bike: 69.5
 
-另外在model中增加了VGG-16的网络模型
+另外增加了VGG-16的网络模型
 
 If you have any problems or find some bugs, please contact with manutdzou@126.com and feel free. Thank you again for your observation.
