@@ -11,7 +11,7 @@ layer {
   python_param {
     module: 'roi_data_layer.layer'
     layer: 'RoIDataLayer'
-    param_str: "'num_classes': 21"
+    param_str: "'num_classes': 4"
   }
 }
 layer {
@@ -377,7 +377,7 @@ layer {
   param { lr_mult: 1 }
   param { lr_mult: 2 }
   inner_product_param {
-    num_output: 21
+    num_output: 4
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -396,7 +396,7 @@ layer {
   param { lr_mult: 1 }
   param { lr_mult: 2 }
   inner_product_param {
-    num_output: 84
+    num_output: 16
     weight_filler {
       type: "gaussian"
       std: 0.001
@@ -458,7 +458,7 @@ layer {
   param { lr_mult: 0 decay_mult: 0 }
   param { lr_mult: 0 decay_mult: 0 }
   convolution_param {
-    num_output: 18   # 2(bg/fg) * 9(anchors)
+    num_output: 140   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -472,7 +472,7 @@ layer {
   param { lr_mult: 0 decay_mult: 0 }
   param { lr_mult: 0 decay_mult: 0 }
   convolution_param {
-    num_output: 36   # 4 * 9(anchors)
+    num_output: 280   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }

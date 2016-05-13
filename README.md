@@ -1,186 +1,51 @@
-### Disclaimer
+# 本项目以VGG_CNN_M_1024为例，训练数据为KITTI
 
-The official Faster R-CNN code (written in MATLAB) is available [here](https://github.com/ShaoqingRen/faster_rcnn).
-If your goal is to reproduce the results in our NIPS 2015 paper, please use the [official code](https://github.com/ShaoqingRen/faster_rcnn).
+## 本项目所有路径为/home/bsl/KITTI_FRC_detection,在不同电脑上需要修改路径
 
-This repository contains a Python *reimplementation* of the MATLAB code.
-This Python implementation is built on a fork of [Fast R-CNN](https://github.com/rbgirshick/fast-rcnn).
-There are slight differences between the two implementations.
-In particular, this Python port
- - is ~10% slower at test-time, because some operations execute on the CPU in Python layers (e.g., 220ms / image vs. 200ms / image for VGG16)
- - gives similar, but not exactly the same, mAP as the MATLAB version
- - is *not compatible* with models trained using the MATLAB code due to the minor implementation differences
+### 1. 网络模型
 
-# *Faster* R-CNN: Towards Real-Time Object Detection with Region Proposal Networks
+网络模型在/models/VGG_CNN_M_1024/faster_rcnn_alt_opt中，4个training stage,运行draw_net.sh可以画出每个步骤的网络图，需要在draw_net.py中添加正确的pycaffe路径
 
-By Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun (Microsoft Research)
+### 2. 数据
 
-This Python implementation contains contributions from Sean Bell (Cornell) written during an MSR internship.
+下载KITTI数据，解压到data中，数据目录为data/training/image_2/...
 
-Please see the official [README.md](https://github.com/ShaoqingRen/faster_rcnn/blob/master/README.md) for more details.
+ImageList_Version_S_AddData.txt为所有数据列表,ImageList_Version_S_GT_AddData.txt为所有数据的不同类别的groundtruth,格式为 "image_path object_num class1_num coordinates class2_num coordinates..." 如果某一类数量为0则class_num为0，coordinates空缺，例如"training/image_2/000240.png 1 1 567.32 177.55 609.97 215.63 0 0" 表示000240.png一共有一个物体，第一类物体一个x_left,y_left,x_right,y_right为"567.32 177.55 609.97 215.63"，第二类和第三类没有物体。
 
-Faster R-CNN was initially described in an [arXiv tech report](http://arxiv.org/abs/1506.01497) and was subsequently published in NIPS 2015.
+所有数据标签做好以后生成train和val数据集，利用Matlab的split_data.m生成KITTI_train_list.txt,KITTI_gt_train.txt和KITTI_val_list.txt,KITTI_gt_val.txt，选用70%作为训练数据，30%作为测试数据。
 
-### License
+### 3. 模型
 
-Faster R-CNN is released under the MIT License (refer to the LICENSE file for details).
+在imagenet_models下载fine_tune的模型VGG_CNN_M_1024.v2.caffemodel,下载命令/scripts/fetch_imagenet_models.sh. 在lib/rpn/generate_anchors.py中设置7个ratios和10个scales共70个anchors，所以模型文件中rpn_cls_score的num_output为140, 2(bg/fg) * 70(anchors),rpn_bbox_pred的num_output为280, 4 * 70(anchors).需要注意test过程中rpn_cls_prob_reshape层的channels应该设为和rpn_cls_score的num_output一致。
 
-### Citing Faster R-CNN
+### 4. 生成数据库
 
-If you find Faster R-CNN useful in your research, please consider citing:
+数据库接口在lib/datasets/中，注意修改绝对路径。不同于原有的VOC数据格式接口读取xml，该数据接口实现将txt的图片路径和图片真值框列表读入.pkl
 
-    @inproceedings{renNIPS15fasterrcnn,
-        Author = {Shaoqing Ren and Kaiming He and Ross Girshick and Jian Sun},
-        Title = {Faster {R-CNN}: Towards Real-Time Object Detection
-                 with Region Proposal Networks},
-        Booktitle = {Advances in Neural Information Processing Systems ({NIPS})},
-        Year = {2015}
-    }
+### 5. 算法评估工具
 
-### Contents
-1. [Requirements: software](#requirements-software)
-2. [Requirements: hardware](#requirements-hardware)
-3. [Basic installation](#installation-sufficient-for-the-demo)
-4. [Demo](#demo)
-5. [Beyond the demo: training and testing](#beyond-the-demo-installation-for-training-and-testing-models)
-6. [Usage](#usage)
+算法评估工具在VOCdevkit-matlab-wrapper中，写了一个KITTI的评估工具，衡量标准为AP值，该工具集成到了python程序中由Python调用matlab.也可以单独由检测生成的/data/results/中的./txt利用main.m直接产生结果（需要自己填写参数）。在data/results中可以生成对应类别的所有检测结果图片，TP和FP的结果图片以供分析。
 
-### Requirements: software
+detection_eval.m为算法评估主程序，这里定义了三个类classes={'car','person','bike'}，minoverlap=0.2，建议在一般情况下将读写图片注释掉，因为读写过程比较慢。
 
-1. Requirements for `Caffe` and `pycaffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
+### 6. tools里自己写的工具说明
 
-  **Note:** Caffe *must* be built with support for Python layers!
+demo_location.py主要将检测结果记录在txt里，这个接口是为我们的私有数据写的，在这里没有使用。
 
-  ```make
-  # In your Makefile.config, make sure to have this line uncommented
-  WITH_PYTHON_LAYER := 1
-  ```
+demo_show.py主要实现将检测结果和真值框同时显示在图片上并将图片保存到data/results/show里面。由于show文件夹没有写成自动建立，需要自建（实在没时间做程序优化啊，见谅啊）。
 
-  You can download my [Makefile.config](http://www.cs.berkeley.edu/~rbg/fast-rcnn-data/Makefile.config) for reference.
-2. Python packages you might not have: `cython`, `python-opencv`, `easydict`
-3. [optional] MATLAB (required for PASCAL VOC evaluation only)
+demo_for_video.py主要实现将视频帧存储的连续图片检测然后做成视频格式，视频格式可自选，默认格式大小最适合。
 
-### Requirements: hardware
+demo_video_for_video.py顾名思义是读视频然后检测写入视频咯，注意需要将视频放在申明的位置。
 
-1. For training smaller networks (ZF, VGG_CNN_M_1024) a good GPU (e.g., Titan, K20, K40, ...) with at least 3G of memory suffices
-2. For training with VGG16, you'll need a K40 (~11G of memory)
+train_debug.py和test_net_debug.py主要为了在pycharm中调试使用，此时需要将参数全部写入。
 
-### Installation (sufficient for the demo)
+### 7. 参数设置
 
-1. Clone the Faster R-CNN repository
-  ```Shell
-  # Make sure to clone with --recursive
-  git clone --recursive https://github.com/rbgirshick/py-faster-rcnn.git
-  ```
+参数设置主要在lib/fast_rcnn/config.py中__C.TRAIN.SCALES = (370,300,250,200,150)表示训练多尺度的样本，__C.TRAIN.MAX_SIZE = 1250表示样本最大边长，其他batch_size,IOU等都可以在这里设置。
 
-2. We'll call the directory that you cloned Faster R-CNN into `FRCN_ROOT`
+### 8. 训练
 
-   *Ignore notes 1 and 2 if you followed step 1 above.*
+可以直接在终端运行train.sh调用experiments/scripts/faster_rcnn_alt_opt.sh训练网络，经过4个80000次训练获得网络模型和测试结果。你将最终获得APs: Car:88.6, Person:73.0, Bike: 69.5
 
-   **Note 1:** If you didn't clone Faster R-CNN with the `--recursive` flag, then you'll need to manually clone the `caffe-fast-rcnn` submodule:
-    ```Shell
-    git submodule update --init --recursive
-    ```
-    **Note 2:** The `caffe-fast-rcnn` submodule needs to be on the `faster-rcnn` branch (or equivalent detached state). This will happen automatically *if you followed step 1 instructions*.
-
-3. Build the Cython modules
-    ```Shell
-    cd $FRCN_ROOT/lib
-    make
-    ```
-
-4. Build Caffe and pycaffe
-    ```Shell
-    cd $FRCN_ROOT/caffe-fast-rcnn
-    # Now follow the Caffe installation instructions here:
-    #   http://caffe.berkeleyvision.org/installation.html
-
-    # If you're experienced with Caffe and have all of the requirements installed
-    # and your Makefile.config in place, then simply do:
-    make -j8 && make pycaffe
-    ```
-
-5. Download pre-computed Faster R-CNN detectors
-    ```Shell
-    cd $FRCN_ROOT
-    ./data/scripts/fetch_faster_rcnn_models.sh
-    ```
-
-    This will populate the `$FRCN_ROOT/data` folder with `faster_rcnn_models`. See `data/README.md` for details.
-    These models were trained on VOC 2007 trainval.
-
-### Demo
-
-*After successfully completing [basic installation](#installation-sufficient-for-the-demo)*, you'll be ready to run the demo.
-
-**Python**
-
-To run the demo
-```Shell
-cd $FRCN_ROOT
-./tools/demo.py
-```
-The demo performs detection using a VGG16 network trained for detection on PASCAL VOC 2007.
-
-### Beyond the demo: installation for training and testing models
-1. Download the training, validation, test data and VOCdevkit
-
-	```Shell
-	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
-	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
-	```
-
-2. Extract all of these tars into one directory named `VOCdevkit`
-
-	```Shell
-	tar xvf VOCtrainval_06-Nov-2007.tar
-	tar xvf VOCtest_06-Nov-2007.tar
-	tar xvf VOCdevkit_08-Jun-2007.tar
-	```
-
-3. It should have this basic structure
-
-	```Shell
-  	$VOCdevkit/                           # development kit
-  	$VOCdevkit/VOCcode/                   # VOC utility code
-  	$VOCdevkit/VOC2007                    # image sets, annotations, etc.
-  	# ... and several other directories ...
-  	```
-
-4. Create symlinks for the PASCAL VOC dataset
-
-	```Shell
-    cd $FRCN_ROOT/data
-    ln -s $VOCdevkit VOCdevkit2007
-    ```
-    Using symlinks is a good idea because you will likely want to share the same PASCAL dataset installation between multiple projects.
-5. [Optional] follow similar steps to get PASCAL VOC 2010 and 2012
-6. Follow the next sections to download pre-trained ImageNet models
-
-### Download pre-trained ImageNet models
-
-Pre-trained ImageNet models can be downloaded for the three networks described in the paper: ZF and VGG16.
-
-```Shell
-cd $FRCN_ROOT
-./data/scripts/fetch_imagenet_models.sh
-```
-VGG16 comes from the [Caffe Model Zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo), but is provided here for your convenience.
-ZF was trained at MSRA.
-
-### Usage
-
-To train and test a Faster R-CNN detector use `experiments/scripts/faster_rcnn_alt_opt.sh`.
-Output is written underneath `$FRCN_ROOT/output`.
-
-```Shell
-cd $FRCN_ROOT
-./experiments/scripts/faster_rcnn_alt_opt.sh [GPU_ID] [NET] [--set ...]
-# GPU_ID is the GPU you want to train on
-# NET in {ZF, VGG_CNN_M_1024, VGG16} is the network arch to use
-# --set ... allows you to specify fast_rcnn.config options, e.g.
-#   --set EXP_DIR seed_rng1701 RNG_SEED 1701
-```
-
-("alt opt" refers to the alternating optimization training algorithm described in the NIPS paper.)
+If you have any problems or find some bugs, please contact with manutdzou@126.com and feel free. Thank you again for your observation.

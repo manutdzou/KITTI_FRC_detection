@@ -288,7 +288,7 @@ layer {
   bottom: "rpn/output"
   top: "rpn_cls_score"
   convolution_param {
-    num_output: 140   # 2(bg/fg) * 9(anchors)
+    num_output: 18   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
   }
 }
@@ -298,7 +298,7 @@ layer {
   bottom: "rpn/output"
   top: "rpn_bbox_pred"
   convolution_param {
-    num_output: 280   # 4 * 9(anchors)
+    num_output: 36   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
   }
 }
@@ -323,7 +323,7 @@ layer {
   type: 'Reshape'
   bottom: 'rpn_cls_prob'
   top: 'rpn_cls_prob_reshape'
-  reshape_param { shape { dim: 0 dim: 140 dim: -1 dim: 0 } }
+  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
 }
 layer {
   name: 'proposal'
@@ -332,78 +332,10 @@ layer {
   bottom: 'rpn_bbox_pred'
   bottom: 'im_info'
   top: 'rois'
+  top: 'scores'
   python_param {
     module: 'rpn.proposal_layer'
     layer: 'ProposalLayer'
     param_str: "'feat_stride': 16"
   }
-}
-
-#========= RCNN ============
-
-layer {
-  name: "roi_pool5"
-  type: "ROIPooling"
-  bottom: "conv5_3"
-  bottom: "rois"
-  top: "pool5"
-  roi_pooling_param {
-    pooled_w: 7
-    pooled_h: 7
-    spatial_scale: 0.0625 # 1/16
-  }
-}
-layer {
-  name: "fc6"
-  type: "InnerProduct"
-  bottom: "pool5"
-  top: "fc6"
-  inner_product_param {
-    num_output: 4096
-  }
-}
-layer {
-  name: "relu6"
-  type: "ReLU"
-  bottom: "fc6"
-  top: "fc6"
-}
-layer {
-  name: "fc7"
-  type: "InnerProduct"
-  bottom: "fc6"
-  top: "fc7"
-  inner_product_param {
-    num_output: 4096
-  }
-}
-layer {
-  name: "relu7"
-  type: "ReLU"
-  bottom: "fc7"
-  top: "fc7"
-}
-layer {
-  name: "cls_score"
-  type: "InnerProduct"
-  bottom: "fc7"
-  top: "cls_score"
-  inner_product_param {
-    num_output: 4
-  }
-}
-layer {
-  name: "bbox_pred"
-  type: "InnerProduct"
-  bottom: "fc7"
-  top: "bbox_pred"
-  inner_product_param {
-    num_output: 16
-  }
-}
-layer {
-  name: "cls_prob"
-  type: "Softmax"
-  bottom: "cls_score"
-  top: "cls_prob"
 }
