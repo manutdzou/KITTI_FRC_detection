@@ -12,6 +12,8 @@
 
 ImageList_Version_S_AddData.txt为所有数据列表,ImageList_Version_S_GT_AddData.txt为所有数据的不同类别的groundtruth,格式为 "image_path object_num class1_num coordinates class2_num coordinates..." 如果某一类数量为0则class_num为0，coordinates空缺，例如"training/image_2/000240.png 1 1 567.32 177.55 609.97 215.63 0 0" 表示000240.png一共有一个物体，第一类物体一个x_left,y_left,x_right,y_right为"567.32 177.55 609.97 215.63"，第二类和第三类没有物体。
 
+data/format_KITTI.py可以用来生成对应格式的list列表和真值，需要修改部分参数和路径。
+
 所有数据标签做好以后生成train和val数据集，利用Matlab的split_data.m生成KITTI_train_list.txt,KITTI_gt_train.txt和KITTI_val_list.txt,KITTI_gt_val.txt，选用70%作为训练数据，30%作为测试数据。
 
 ### 3. 模型
